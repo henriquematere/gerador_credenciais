@@ -8,7 +8,6 @@ MAPA_CENTRO_CUSTO = {
     "TI": "1010",
     "Recursos Humanos": "3015",
     "Producao": "5050",
-    # Adicione outros setores e seus centros de custo aqui
 }
 
 URL_CLOUD = "https://antares-s3.seniorcloud.com.br/?utm_medium=email&_hsenc=p2ANqtz-9VYNrv3-RJ4vxW-PlKV0Yt-sGD_3pfWGutm2VbCMZ0XjlDWMcQ3evC1qPxH2s6AE0l7zz8443jyxq3JrK1c7vxnaw4pXQzL33e0DZYAUq145Xbguc&_hsmi=335519716&utm_content=335519716&utm_source=hs_email"
@@ -135,41 +134,47 @@ if botao_gerar:
         centro_custo = MAPA_CENTRO_CUSTO.get(setor_colab, "N/A (Setor não mapeado)")
 
         # Prepara a string de saída
-        output_string = f"""
-**Nome do colaborador:** {nome_completo_colab}
-**Setor:** {setor_colab}
-**Centro de Custos:** {centro_custo}
-**E-mail:** {email_colab}
-**Usuário de referência:** {usuario_referencia_colab}
----
-"""
+        output_lines = []
+        output_lines.append(f"**Nome do colaborador:** {nome_completo_colab}")
+        output_lines.append(f"**Setor:** {setor_colab}")
+        output_lines.append(f"**Centro de Custos:** {centro_custo}")
+        output_lines.append(f"**E-mail:** {email_colab}")
+        output_lines.append(f"**Usuário de referência:** {usuario_referencia_colab}")
+        
+        # Adiciona um separador se houver seções de sistemas a seguir
+        if cb_cloud or cb_senior or cb_glpi:
+            output_lines.append("---")
 
         if cb_cloud:
             user_c, pass_c = gerar_credenciais_cloud(primeiro_nome, ultimo_sobrenome, setor_normalizado)
-            output_string += f"""
-**Acessar a Cloud pelo link {URL_CLOUD} :**
-    **Usuário:** `{user_c}`
-    **Senha:** `{pass_c}`
----
-"""
+            # Adiciona um espaço extra (nova linha) antes da seção para melhor separação visual
+            if len(output_lines) > 1 and output_lines[-1] != "---": output_lines.append("") # Adiciona espaço se não for o primeiro item após "---"
+            output_lines.append(f"**Acessar a Cloud pelo link:** {URL_CLOUD}")
+            output_lines.append(f"**Usuário:** `{user_c}`") # Sem espaços no início da linha
+            output_lines.append(f"**Senha:** `{pass_c}`")   # Sem espaços no início da linha
+            if cb_senior or cb_glpi: # Adiciona separador se mais sistemas seguirem
+                output_lines.append("---")
+
         if cb_senior:
             user_s, pass_s = gerar_credenciais_senior(primeiro_nome, ultimo_sobrenome)
-            output_string += f"""
-**Senior:**
-    **Usuário:** `{user_s}`
-    **Senha:** `{pass_s}`
----
-"""
-        if cb_glpi:
-            # Para a senha do GLPI, usamos o primeiro nome original capitalizado e sem acentos
-            primeiro_nome_glpi_norm_cap, _, _ = processar_nome_completo(unidecode(primeiro_nome_cap))
+            if len(output_lines) > 1 and output_lines[-1] != "---": output_lines.append("")
+            output_lines.append("**Senior:**")
+            output_lines.append(f"**Usuário:** `{user_s}`") # Sem espaços no início da linha
+            output_lines.append(f"**Senha:** `{pass_s}`")   # Sem espaços no início da linha
+            if cb_glpi: # Adiciona separador se GLPI seguir
+                output_lines.append("---")
 
+        if cb_glpi:
+            primeiro_nome_glpi_norm_cap, _, _ = processar_nome_completo(unidecode(primeiro_nome_cap))
             user_g, pass_g = gerar_credenciais_glpi(primeiro_nome, ultimo_sobrenome, primeiro_nome_glpi_norm_cap)
-            output_string += f"""
-**Para realizar chamados para o TI, no {URL_GLPI} :**
-    **Usuário:** `{user_g}`
-    **Senha:** `{pass_g}`
-"""
+            if len(output_lines) > 1 and output_lines[-1] != "---": output_lines.append("")
+            output_lines.append(f"**Para realizar chamados para o TI, no link:** {URL_GLPI}")
+            output_lines.append(f"**Usuário:** `{user_g}`") # Sem espaços no início da linha
+            output_lines.append(f"**Senha:** `{pass_g}`")   # Sem espaços no início da linha
+            # Não adicionamos "---" após a última seção, conforme o formato desejado.
+
+        output_string = "\n".join(output_lines)
+        st.markdown(output_string)
         st.markdown(output_string)
 
         st.download_button(
