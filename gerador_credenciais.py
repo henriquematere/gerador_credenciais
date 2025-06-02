@@ -4,11 +4,58 @@ from unidecode import unidecode # Para remover acentos
 
 # --- Dicionários e Constantes ---
 MAPA_CENTRO_CUSTO = {
-    "Fiscal": "4020",
-    "TI": "1010",
-    "Recursos Humanos": "3015",
-    "Producao": "5050",
+    "Comercial": "1010",
+    "Supervisão de Vendas": "1020",
+    "CIV": "1030",
+    "E-Commerce": "1040",
+    "Marketing": "1050",
+    "Logística": "1060",
+    "Desenvolvimento de Produtos": "1070",
+    "Customização": "1080",
+    "Promotores de Vendas": "1090",
+    "Transporte Aéreo": "1091",
+    "Gestão Industrial": "2010",
+    "PCP": "2020",
+    "Qualidade": "2030",
+    "Eng. Proc. Produtos": "2040",
+    "Manutenção Predial": "2050",
+    "Manutenção": "2060",
+    "Expedição": "2070",
+    "Almoxarifado": "2080",
+    "Diretoria": "4010",
+    "Administrativo": "4020",
+    "Importação": "4030",
+    "Exportação": "4035",
+    "Financeiro": "4040",
+    "RH": "4050",
+    "TI": "4060",
+    "Compras": "4070",
+    "Seg. do Trabalho": "4080",
+    "Portaria": "4090",
+    "Limpeza": "4100",
+    "Cadastro": "4110",
+    "OOE": "4120",
+    "Facilities": "4121",
+    "Acoplagem": "6010",
+    "Baralho": "6020",
+    "Blister": "6030",
+    "Brasilflex": "6040",
+    "Corte e Solda": "6050",
+    "Corte Vinco": "6060",
+    "Embalagens Kraft": "6070",
+    "Envase": "6080",
+    "Flexografia": "6090",
+    "Guilhotina": "6100",
+    "Impressão": "6110",
+    "Injetora": "6120",
+    "Marcenaria": "6140",
+    "Montagem": "6150",
+    "Montagem II": "6160",
+    "Pintura": "6170",
+    "Termoformadora": "6180",
+    "Vinil": "6190",
 }
+
 
 URL_CLOUD = "https://antares-s3.seniorcloud.com.br/?utm_medium=email&_hsenc=p2ANqtz-9VYNrv3-RJ4vxW-PlKV0Yt-sGD_3pfWGutm2VbCMZ0XjlDWMcQ3evC1qPxH2s6AE0l7zz8443jyxq3JrK1c7vxnaw4pXQzL33e0DZYAUq145Xbguc&_hsmi=335519716&utm_content=335519716&utm_source=hs_email"
 URL_GLPI = "https://glpi.masfatech.com.br/glpi/marketplace/formcreator/front/formlist.php"
@@ -133,48 +180,49 @@ if botao_gerar:
         setor_normalizado = normalizar_texto(setor_colab)
         centro_custo = MAPA_CENTRO_CUSTO.get(setor_colab, "N/A (Setor não mapeado)")
 
-        # Prepara a string de saída
+       # Prepara a string de saída - Nova tentativa de formatação
         output_lines = []
-        output_lines.append(f"**Nome do colaborador:** {nome_completo_colab}")
-        output_lines.append(f"**Setor:** {setor_colab}")
-        output_lines.append(f"**Centro de Custos:** {centro_custo}")
-        output_lines.append(f"**E-mail:** {email_colab}")
-        output_lines.append(f"**Usuário de referência:** {usuario_referencia_colab}")
         
-        # Adiciona um separador se houver seções de sistemas a seguir
+        # Bloco de Informações Principais
+        output_lines.append(f"Nome do colaborador: **{nome_completo_colab}**") # Negrito apenas no valor
+        output_lines.append(f"Setor: **{setor_colab}**")
+        output_lines.append(f"Centro de Custos: **{centro_custo}**")
+        output_lines.append(f"E-mail: **{email_colab}**")
+        output_lines.append(f"Usuário de referência: **{usuario_referencia_colab}**")
+        
+        # Adiciona um separador com linha em branco antes, se houver seções de sistemas a seguir
         if cb_cloud or cb_senior or cb_glpi:
-            output_lines.append("---")
+            output_lines.append("\n---") 
 
         if cb_cloud:
             user_c, pass_c = gerar_credenciais_cloud(primeiro_nome, ultimo_sobrenome, setor_normalizado)
-            # Adiciona um espaço extra (nova linha) antes da seção para melhor separação visual
-            if len(output_lines) > 1 and output_lines[-1] != "---": output_lines.append("") # Adiciona espaço se não for o primeiro item após "---"
-            output_lines.append(f"**Acessar a Cloud pelo link:** {URL_CLOUD}")
-            output_lines.append(f"**Usuário:** `{user_c}`") # Sem espaços no início da linha
-            output_lines.append(f"**Senha:** `{pass_c}`")   # Sem espaços no início da linha
+            link_texto_cloud = "Link de Acesso Cloud" # Texto para o link mascarado
+            # Adiciona linha em branco antes do título da seção, se não for a primeira após um "---"
+            if output_lines[-1] != "\n---": output_lines.append("") 
+            output_lines.append(f"Acessar a Cloud: [{link_texto_cloud}]({URL_CLOUD})") # Título da seção sem negrito
+            output_lines.append(f"Usuário: `{user_c}` Senha: `{pass_c}`") 
             if cb_senior or cb_glpi: # Adiciona separador se mais sistemas seguirem
-                output_lines.append("---")
+                output_lines.append("\n---")
 
         if cb_senior:
             user_s, pass_s = gerar_credenciais_senior(primeiro_nome, ultimo_sobrenome)
-            if len(output_lines) > 1 and output_lines[-1] != "---": output_lines.append("")
-            output_lines.append("**Senior:**")
-            output_lines.append(f"**Usuário:** `{user_s}`") # Sem espaços no início da linha
-            output_lines.append(f"**Senha:** `{pass_s}`")   # Sem espaços no início da linha
+            if output_lines[-1] != "\n---": output_lines.append("")
+            output_lines.append(f"Senior:") # Título da seção sem negrito
+            output_lines.append(f"Usuário: `{user_s}` Senha: `{pass_s}`")
             if cb_glpi: # Adiciona separador se GLPI seguir
-                output_lines.append("---")
+                output_lines.append("\n---")
 
         if cb_glpi:
             primeiro_nome_glpi_norm_cap, _, _ = processar_nome_completo(unidecode(primeiro_nome_cap))
             user_g, pass_g = gerar_credenciais_glpi(primeiro_nome, ultimo_sobrenome, primeiro_nome_glpi_norm_cap)
-            if len(output_lines) > 1 and output_lines[-1] != "---": output_lines.append("")
-            output_lines.append(f"**Para realizar chamados para o TI, no link:** {URL_GLPI}")
-            output_lines.append(f"**Usuário:** `{user_g}`") # Sem espaços no início da linha
-            output_lines.append(f"**Senha:** `{pass_g}`")   # Sem espaços no início da linha
-            # Não adicionamos "---" após a última seção, conforme o formato desejado.
+            link_texto_glpi = "Portal de Chamados TI" # Texto para o link mascarado
+            if output_lines[-1] != "\n---": output_lines.append("")
+            # A linha abaixo é a que você mencionou, com o título da seção sem negrito e o link mascarado:
+            output_lines.append(f"Para realizar chamados para o TI: [{link_texto_glpi}]({URL_GLPI})") 
+            output_lines.append(f"Usuário: `{user_g}` Senha: `{pass_g}`")
+            # Não há "---" após a última seção
 
         output_string = "\n".join(output_lines)
-        st.markdown(output_string)
         st.markdown(output_string)
 
         st.download_button(
