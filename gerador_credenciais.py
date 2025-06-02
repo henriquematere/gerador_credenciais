@@ -124,9 +124,9 @@ if modo_operacao == "Criar Novas Credenciais Completas":
         st.markdown("##### Selecionar Sistemas (para criação completa):")
         col1, col2, col3 = st.columns(3)
         with col1:
-            cb_cloud = st.checkbox("Senior Cloud", value=True, key="cb_cloud_full")
+            cb_cloud = st.checkbox("Cloud", value=True, key="cb_cloud_full")
         with col2:
-            cb_senior = st.checkbox("Senior Principal", value=True, key="cb_senior_full")
+            cb_senior = st.checkbox("Senior", value=True, key="cb_senior_full")
         with col3:
             cb_glpi = st.checkbox("GLPI Chamados", value=True, key="cb_glpi_full")
         
