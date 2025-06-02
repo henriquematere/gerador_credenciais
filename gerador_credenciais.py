@@ -2,7 +2,6 @@ import streamlit as st
 import datetime
 from unidecode import unidecode
 
-# --- Dicionários e Constantes ---
 MAPA_CENTRO_CUSTO = {
     "Comercial": "1010",
     "Supervisão de Vendas": "1020",
@@ -59,7 +58,6 @@ MAPA_CENTRO_CUSTO = {
 URL_CLOUD = "https://antares-s3.seniorcloud.com.br/?utm_medium=email&_hsenc=p2ANqtz-9VYNrv3-RJ4vxW-PlKV0Yt-sGD_3pfWGutm2VbCMZ0XjlDWMcQ3evC1qPxH2s6AE0l7zz8443jyxq3JrK1c7vxnaw4pXQzL33e0DZYAUq145Xbguc&_hsmi=335519716&utm_content=335519716&utm_source=hs_email"
 URL_GLPI = "https://glpi.masfatech.com.br/glpi/marketplace/formcreator/front/formlist.php"
 
-# --- Funções Auxiliares ---
 def normalizar_texto(texto):
     return unidecode(texto).lower()
 
@@ -73,7 +71,6 @@ def processar_nome_completo(nome_completo):
     ultimo_sobrenome_norm = normalizar_texto(nomes_validos[-1]) if len(nomes_validos) > 1 else primeiro_nome_norm
     return primeiro_nome_norm, ultimo_sobrenome_norm, primeiro_nome_original.capitalize()
 
-# --- Funções de Geração de Credenciais ---
 def gerar_credenciais_cloud(primeiro_nome_norm, ultimo_sobrenome_norm, setor_norm):
     usuario_cloud = f"gala.{primeiro_nome_norm[0]}{ultimo_sobrenome_norm}"
     ano_atual_curto = str(datetime.datetime.now().year)[-2:]
@@ -96,10 +93,13 @@ def gerar_credenciais_glpi(primeiro_nome_norm, ultimo_sobrenome_norm, primeiro_n
     senha_glpi = f"{primeiro_nome_cap_para_senha}@123"
     return usuario_glpi, senha_glpi
 
-# --- Interface Streamlit ---
 st.set_page_config(page_title="Gerador de Credenciais", layout="wide")
 st.title("⚙️ Gerador de Credenciais de Colaboradores")
 st.markdown("Selecione a ação desejada e preencha os dados do colaborador.")
+
+mapa_opcao_formatada_para_setor = {f"{setor} (CC: {cc})": setor for setor, cc in MAPA_CENTRO_CUSTO.items()}
+opcoes_setor_formatadas_sorted = sorted(list(mapa_opcao_formatada_para_setor.keys()))
+setores_para_selectbox = [""] + opcoes_setor_formatadas_sorted
 
 modo_operacao = st.radio(
     "Selecione a Ação Desejada:",
@@ -108,15 +108,18 @@ modo_operacao = st.radio(
     horizontal=True 
 )
 
-setores_disponiveis = [""] + sorted(list(MAPA_CENTRO_CUSTO.keys()))
-
 if modo_operacao == "Criar Novas Credenciais Completas":
     st.subheader("Modo: Criar Novas Credenciais Completas")
     with st.form("formulario_colaborador_completo"):
-        nome_completo_colab = st.text_input("Nome Completo do Colaborador*", placeholder="Ex: Fulano Siclano da Silva", key="nome_full")
-        email_colab = st.text_input("E-mail do Colaborador*", placeholder="Ex: fulano.siclano@gala.com.br", key="email_full")
-        setor_colab = st.selectbox("Setor*", options=setores_disponiveis, key="setor_full", placeholder="Ex: Selecione um setor") # type: ignore
-        usuario_referencia_colab = st.text_input("Usuário de Referência (para GLPI)*", placeholder="Ex: fulano.siclano", key="ref_full")
+        nome_completo_colab = st.text_input("Nome Completo do Colaborador", placeholder="Ex: Fulano Siclano da Silva", key="nome_full")
+        email_colab = st.text_input("E-mail do Colaborador", placeholder="Ex: fulano.siclano@gala.com.br", key="email_full")
+        setor_selecionado_formatado_full = st.selectbox(
+            "Setor (com Centro de Custo)*", 
+            options=setores_para_selectbox, 
+            key="setor_full_fmt", 
+            placeholder="Selecione ou digite nome/CC do setor"
+        )
+        usuario_referencia_colab = st.text_input("Usuário de Referência", placeholder="Ex: fulano.siclano", key="ref_full")
         
         st.markdown("##### Selecionar Sistemas (para criação completa):")
         col1, col2, col3 = st.columns(3)
@@ -131,14 +134,22 @@ if modo_operacao == "Criar Novas Credenciais Completas":
 
     if botao_gerar_completo:
         erro_completo = False
+        setor_real_colab = None 
         if not nome_completo_colab: st.error("O campo 'Nome Completo' é obrigatório."); erro_completo = True
         if not email_colab: st.error("O campo 'E-mail' é obrigatório."); erro_completo = True
-        if not setor_colab: st.error("O campo 'Setor' é obrigatório."); erro_completo = True
+        
+        if not setor_selecionado_formatado_full:
+            st.error("O campo 'Setor' é obrigatório."); erro_completo = True
+        else:
+            setor_real_colab = mapa_opcao_formatada_para_setor.get(setor_selecionado_formatado_full)
+            if not setor_real_colab:
+                st.error("Seleção de setor inválida."); erro_completo = True
+        
         if cb_glpi and not usuario_referencia_colab: st.error("O 'Usuário de Referência' é obrigatório para GLPI."); erro_completo = True
 
-        if not erro_completo:
+        if not erro_completo and setor_real_colab:
             primeiro_nome, ultimo_sobrenome, primeiro_nome_cap = processar_nome_completo(nome_completo_colab)
-            setor_normalizado = normalizar_texto(setor_colab)
+            setor_normalizado = normalizar_texto(setor_real_colab)
 
             output_lines = []
             first_section_added = False
@@ -168,7 +179,8 @@ if modo_operacao == "Criar Novas Credenciais Completas":
             else:
                 output_string = "\n".join(output_lines)
                 st.markdown(output_string)
-                # Linhas do botão de download removidas daqui
+        elif not erro_completo and not setor_real_colab :
+             st.warning("Problema ao identificar o setor selecionado.")
         else:
             st.warning("Corrija os erros no formulário.")
 
@@ -176,18 +188,30 @@ elif modo_operacao == "Redefinir Apenas Senha da Cloud":
     st.subheader("Modo: Redefinir Apenas Senha da Cloud")
     with st.form("formulario_reset_cloud"):
         nome_completo_colab_reset = st.text_input("Nome Completo do Colaborador*", key="nome_reset", placeholder="Ex: Fulano Siclano")
-        setor_colab_reset = st.selectbox("Setor do Colaborador*", options=setores_disponiveis, key="setor_reset", placeholder="Ex: Selecione um setor") # type: ignore
+        setor_selecionado_formatado_reset = st.selectbox(
+            "Setor do Colaborador (com Centro de Custo)*", 
+            options=setores_para_selectbox, 
+            key="setor_reset_fmt", 
+            placeholder="Selecione ou digite nome/CC do setor"
+        )
         
         botao_reset_cloud = st.form_submit_button("Gerar Nova Senha Cloud")
 
     if botao_reset_cloud:
         erro_reset = False
+        setor_real_reset = None
         if not nome_completo_colab_reset: st.error("O campo 'Nome Completo' é obrigatório."); erro_reset = True
-        if not setor_colab_reset: st.error("O campo 'Setor' é obrigatório."); erro_reset = True
         
-        if not erro_reset:
+        if not setor_selecionado_formatado_reset:
+            st.error("O campo 'Setor' é obrigatório."); erro_reset = True
+        else:
+            setor_real_reset = mapa_opcao_formatada_para_setor.get(setor_selecionado_formatado_reset)
+            if not setor_real_reset:
+                st.error("Seleção de setor inválida."); erro_reset = True
+        
+        if not erro_reset and setor_real_reset:
             primeiro_nome, ultimo_sobrenome, _ = processar_nome_completo(nome_completo_colab_reset)
-            setor_normalizado = normalizar_texto(setor_colab_reset)
+            setor_normalizado = normalizar_texto(setor_real_reset)
             
             if not primeiro_nome or not setor_normalizado :
                 st.error("Não foi possível processar o nome ou setor fornecido.")
@@ -201,8 +225,9 @@ elif modo_operacao == "Redefinir Apenas Senha da Cloud":
                 
                 st.markdown("\n".join(reset_output_lines))
                 st.text_area("Nova Senha Cloud (para copiar):", nova_senha_cloud, height=70, key="pwd_copy_area_cloud_reset", help="Selecione e copie a senha.")
+        elif not erro_reset and not setor_real_reset:
+             st.warning("Problema ao identificar o setor selecionado.")
         else:
             st.warning("Corrija os erros no formulário.")
 
 st.markdown("---")
-st.caption(f"Parceiro de Programação - Gerador de Credenciais v1.3 (Atualizado em {datetime.date.today().strftime('%d/%m/%Y')})")
