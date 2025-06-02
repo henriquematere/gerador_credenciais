@@ -1,6 +1,6 @@
 import streamlit as st
 import datetime
-from unidecode import unidecode # Para remover acentos
+from unidecode import unidecode
 
 # --- Dicionários e Constantes ---
 MAPA_CENTRO_CUSTO = {
@@ -105,19 +105,18 @@ modo_operacao = st.radio(
     "Selecione a Ação Desejada:",
     ("Criar Novas Credenciais Completas", "Redefinir Apenas Senha da Cloud"),
     key="modo_operacao_key",
-    horizontal=True # Para melhor visualização do radio
+    horizontal=True 
 )
 
-# Define opções de setor uma vez
 setores_disponiveis = [""] + sorted(list(MAPA_CENTRO_CUSTO.keys()))
 
 if modo_operacao == "Criar Novas Credenciais Completas":
     st.subheader("Modo: Criar Novas Credenciais Completas")
     with st.form("formulario_colaborador_completo"):
-        nome_completo_colab = st.text_input("Nome Completo do Colaborador*", placeholder="Ex: Thalita Rosa Cazão", key="nome_full")
-        email_colab = st.text_input("E-mail do Colaborador*", placeholder="Ex: thalita.rosa@empresa.com.br", key="email_full")
-        setor_colab = st.selectbox("Setor*", options=setores_disponiveis, key="setor_full", help="Selecione o setor do colaborador.")
-        usuario_referencia_colab = st.text_input("Usuário de Referência (para GLPI)*", placeholder="Ex: Kaiky Souza", key="ref_full")
+        nome_completo_colab = st.text_input("Nome Completo do Colaborador*", placeholder="Ex: Fulano Siclano da Silva", key="nome_full")
+        email_colab = st.text_input("E-mail do Colaborador*", placeholder="Ex: fulano.siclano@gala.com.br", key="email_full")
+        setor_colab = st.selectbox("Setor*", options=setores_disponiveis, key="setor_full", placeholder="Ex: Selecione um setor") # type: ignore
+        usuario_referencia_colab = st.text_input("Usuário de Referência (para GLPI)*", placeholder="Ex: fulano.siclano", key="ref_full")
         
         st.markdown("##### Selecionar Sistemas (para criação completa):")
         col1, col2, col3 = st.columns(3)
@@ -147,7 +146,7 @@ if modo_operacao == "Criar Novas Credenciais Completas":
             if cb_cloud:
                 if first_section_added: output_lines.append("")
                 user_c, pass_c = gerar_credenciais_cloud(primeiro_nome, ultimo_sobrenome, setor_normalizado)
-                output_lines.append(f"Acessar a Cloud: [{URL_CLOUD.split('//')[1].split('/')[0]}]({URL_CLOUD})") # Texto do link mais curto
+                output_lines.append(f"Acessar a Cloud: [{URL_CLOUD.split('//')[1].split('/')[0]}]({URL_CLOUD})")
                 output_lines.append(f"Usuário: `{user_c}` Senha: `{pass_c}`")
                 first_section_added = True
             if cb_senior:
@@ -160,7 +159,7 @@ if modo_operacao == "Criar Novas Credenciais Completas":
                 if first_section_added: output_lines.append("")
                 nome_formatado_para_senha_glpi = unidecode(primeiro_nome_cap)
                 user_g, pass_g = gerar_credenciais_glpi(primeiro_nome, ultimo_sobrenome, nome_formatado_para_senha_glpi)
-                output_lines.append(f"Para realizar chamados para o TI: [{URL_GLPI.split('//')[1].split('/')[0]}]({URL_GLPI})") # Texto do link mais curto
+                output_lines.append(f"Para realizar chamados para o TI: [{URL_GLPI.split('//')[1].split('/')[0]}]({URL_GLPI})")
                 output_lines.append(f"Usuário: `{user_g}` Senha: `{pass_g}`")
                 first_section_added = True
             
@@ -169,21 +168,15 @@ if modo_operacao == "Criar Novas Credenciais Completas":
             else:
                 output_string = "\n".join(output_lines)
                 st.markdown(output_string)
-                nome_arquivo_download = normalizar_texto(nome_completo_colab.split()[0]) if nome_completo_colab else "credenciais"
-                st.download_button(
-                    label="Baixar Credenciais em TXT",
-                    data=output_string.replace("`", ""),
-                    file_name=f"credenciais_{nome_arquivo_download}.txt",
-                    mime="text/plain"
-                )
+                # Linhas do botão de download removidas daqui
         else:
             st.warning("Corrija os erros no formulário.")
 
 elif modo_operacao == "Redefinir Apenas Senha da Cloud":
     st.subheader("Modo: Redefinir Apenas Senha da Cloud")
     with st.form("formulario_reset_cloud"):
-        nome_completo_colab_reset = st.text_input("Nome Completo do Colaborador*", key="nome_reset", placeholder="Ex: Thalita Rosa Cazão")
-        setor_colab_reset = st.selectbox("Setor do Colaborador*", options=setores_disponiveis, key="setor_reset", help="Selecione o setor para a regra da senha da Cloud.")
+        nome_completo_colab_reset = st.text_input("Nome Completo do Colaborador*", key="nome_reset", placeholder="Ex: Fulano Siclano")
+        setor_colab_reset = st.selectbox("Setor do Colaborador*", options=setores_disponiveis, key="setor_reset", placeholder="Ex: Selecione um setor") # type: ignore
         
         botao_reset_cloud = st.form_submit_button("Gerar Nova Senha Cloud")
 
@@ -207,9 +200,9 @@ elif modo_operacao == "Redefinir Apenas Senha da Cloud":
                 reset_output_lines.append(f"Nova Senha Cloud: `{nova_senha_cloud}`")
                 
                 st.markdown("\n".join(reset_output_lines))
-                st.text_area("Nova Senha Cloud (para copiar):", nova_senha_cloud, height=50, key="pwd_copy_area_cloud_reset", help="Selecione e copie a senha.")
+                st.text_area("Nova Senha Cloud (para copiar):", nova_senha_cloud, height=70, key="pwd_copy_area_cloud_reset", help="Selecione e copie a senha.")
         else:
             st.warning("Corrija os erros no formulário.")
 
 st.markdown("---")
-st.caption(f"Parceiro de Programação - Gerador de Credenciais v1.2 (Atualizado em {datetime.date.today().strftime('%d/%m/%Y')})")
+st.caption(f"Parceiro de Programação - Gerador de Credenciais v1.3 (Atualizado em {datetime.date.today().strftime('%d/%m/%Y')})")
