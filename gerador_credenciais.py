@@ -118,9 +118,7 @@ if modo_operacao == "Criar Novas Credenciais Completas":
             options=setores_para_selectbox, 
             key="setor_full_fmt", 
             placeholder="Selecione ou digite nome/CC do setor"
-        )
-        usuario_referencia_colab = st.text_input("Usuário de Referência", placeholder="Ex: fulano.siclano", key="ref_full")
-        
+        )        
         st.markdown("##### Selecionar Sistemas (para criação completa):")
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -145,8 +143,6 @@ if modo_operacao == "Criar Novas Credenciais Completas":
             if not setor_real_colab:
                 st.error("Seleção de setor inválida."); erro_completo = True
         
-        if cb_glpi and not usuario_referencia_colab: st.error("O 'Usuário de Referência' é obrigatório para GLPI."); erro_completo = True
-
         if not erro_completo and setor_real_colab:
             primeiro_nome, ultimo_sobrenome, primeiro_nome_cap = processar_nome_completo(nome_completo_colab)
             setor_normalizado = normalizar_texto(setor_real_colab)
