@@ -102,9 +102,9 @@ opcoes_setor_formatadas_sorted = sorted(list(mapa_opcao_formatada_para_setor.key
 setores_para_selectbox = [""] + opcoes_setor_formatadas_sorted
 
 with st.form("formulario_gerador_credenciais"):
-    nome_completo_colab = st.text_input("Nome Completo do Colaborador*", placeholder="Ex: Fulano Siclano da Silva", key="nome_colab")
+    nome_completo_colab = st.text_input("Nome Completo do Colaborador", placeholder="Ex: Fulano Siclano da Silva", key="nome_colab")
     setor_selecionado_formatado = st.selectbox(
-        "Setor (com Centro de Custo)*", 
+        "Setor (com Centro de Custo)", 
         options=setores_para_selectbox, 
         key="setor_colab_fmt", 
         placeholder="Selecione ou digite nome/CC do setor"
@@ -113,11 +113,11 @@ with st.form("formulario_gerador_credenciais"):
     st.markdown("##### Selecionar Sistemas:")
     col1, col2, col3 = st.columns(3)
     with col1:
-        cb_cloud = st.checkbox("Senior Cloud", value=True, key="cb_cloud_sys")
+        cb_cloud = st.checkbox("Cloud", value=True, key="cb_cloud_sys")
     with col2:
-        cb_senior = st.checkbox("Senior Principal", value=True, key="cb_senior_sys")
+        cb_senior = st.checkbox("Senior", value=True, key="cb_senior_sys")
     with col3:
-        cb_glpi = st.checkbox("GLPI Chamados", value=True, key="cb_glpi_sys")
+        cb_glpi = st.checkbox("GLPI", value=True, key="cb_glpi_sys")
     
     botao_gerar = st.form_submit_button("Gerar Credenciais")
 
