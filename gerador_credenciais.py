@@ -155,6 +155,7 @@ if botao_gerar:
 **Nome do colaborador** : {nome_completo_colab}  
 **Setor** : {setor_real_colab}  
 **E-mail** : {email_colab}  
+**Usuário de Referência** : {usuario_referencia}
 
 """
         if cb_cloud:
