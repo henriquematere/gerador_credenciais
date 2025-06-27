@@ -57,6 +57,7 @@ MAPA_CENTRO_CUSTO = {
 
 URL_CLOUD = "https://antares-s3.seniorcloud.com.br/?utm_medium=email&_hsenc=p2ANqtz-9VYNrv3-RJ4vxW-PlKV0Yt-sGD_3pfWGutm2VbCMZ0XjlDWMcQ3evC1qPxH2s6AE0l7zz8443jyxq3JrK1c7vxnaw4pXQzL33e0DZYAUq145Xbguc&_hsmi=335519716&utm_content=335519716&utm_source=hs_email"
 URL_GLPI = "https://glpi.masfatech.com.br/glpi/marketplace/formcreator/front/formlist.php"
+URL_RESERVA = "https://reuniao.masfatech.com.br/"
 
 def normalizar_texto(texto):
     return unidecode(texto).lower()
@@ -110,16 +111,18 @@ with st.form("formulario_gerador_credenciais"):
         key="setor_colab_fmt", 
         placeholder="Selecione ou digite nome/CC do setor"
     )
-    usuario_referencia = st.text_input("Usuário de referência (opcional)", placeholder="Ex: valquiria", key="usuario_ref")
+    usuario_referencia = st.text_input("Usuário de referência (opcional)", key="usuario_ref")
     
     st.markdown("##### Selecionar Sistemas:")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4= st.columns(4)
     with col1:
         cb_cloud = st.checkbox("Cloud", value=True, key="cb_cloud_sys")
     with col2:
         cb_senior = st.checkbox("Senior", value=True, key="cb_senior_sys")
     with col3:
         cb_glpi = st.checkbox("GLPI", value=True, key="cb_glpi_sys")
+    with col4:
+        cb_reserva = st.checkbox("Reserva de Sala", value=True, key="cb_reserva_sys")
     
     botao_gerar = st.form_submit_button("Gerar Credenciais")
 
@@ -153,14 +156,11 @@ if botao_gerar:
 **Setor** : {setor_real_colab}  
 **E-mail** : {email_colab}  
 
-**Usuário de referência** : {usuario_referencia if usuario_referencia else '-'}  
-
 """
-
         if cb_cloud:
             user_c, pass_c = gerar_credenciais_cloud(primeiro_nome, ultimo_sobrenome, setor_normalizado)
-            output += f"""<pre>
-Acessar a Cloud pelo link Cloud :
+            output += f"""**Acessar a Cloud pelo link:** [{URL_CLOUD.split('//')[1].split('/')[0]}]({URL_CLOUD})  
+<pre>
 Usuário: {user_c}
 Senha: {pass_c}
 </pre>
@@ -168,8 +168,8 @@ Senha: {pass_c}
 
         if cb_senior:
             user_s, pass_s = gerar_credenciais_senior(primeiro_nome, ultimo_sobrenome)
-            output += f"""<pre>
-Senior (Segundo acesso dentro da Cloud):
+            output += f"""**Senior (Segundo acesso dentro da Cloud):**  
+<pre>
 Usuário: {user_s}
 Senha: {pass_s}
 </pre>
@@ -178,11 +178,21 @@ Senha: {pass_s}
         if cb_glpi:
             nome_formatado_para_senha_glpi = unidecode(primeiro_nome_cap)
             user_g, pass_g = gerar_credenciais_glpi(primeiro_nome, ultimo_sobrenome, nome_formatado_para_senha_glpi)
-            output += f"""<pre>
-Acessar o local para fazer chamado para o TI (GLPI) pelo link Lista de formulários - GLPI:
+            output += f"""**Acessar o local para fazer chamado para o TI (GLPI):** [{URL_GLPI.split('//')[1].split('/')[0]}]({URL_GLPI})  
+<pre>
 Usuário: {user_g}
 Senha: {pass_g}
 </pre>
 """
+            
+        if cb_reserva:
+            nome_formatado_para_senha_glpi = unidecode(primeiro_nome_cap)
+            user_g, pass_g = gerar_credenciais_glpi(primeiro_nome, ultimo_sobrenome, nome_formatado_para_senha_glpi)
+            output += f"""**Acessar a Reserva de salas de reunião:** [{URL_RESERVA.split('//')[1].split('/')[0]}]({URL_RESERVA})  
+<pre>
+Usuário: {user_g}
+Senha: {pass_g}
+</pre>
+"""     
 
         st.markdown(output, unsafe_allow_html=True)
