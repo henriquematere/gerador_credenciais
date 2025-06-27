@@ -103,12 +103,14 @@ setores_para_selectbox = [""] + opcoes_setor_formatadas_sorted
 
 with st.form("formulario_gerador_credenciais"):
     nome_completo_colab = st.text_input("Nome Completo do Colaborador", placeholder="Ex: Fulano Siclano da Silva", key="nome_colab")
+    email_colab = st.text_input("E-mail do Colaborador", placeholder="Ex: fulano.siclano@gala.com.br", key="email_colab")
     setor_selecionado_formatado = st.selectbox(
         "Setor (com Centro de Custo)", 
         options=setores_para_selectbox, 
         key="setor_colab_fmt", 
         placeholder="Selecione ou digite nome/CC do setor"
     )
+    usuario_referencia = st.text_input("Usuário de referência (opcional)", placeholder="Ex: valquiria", key="usuario_ref")
     
     st.markdown("##### Selecionar Sistemas:")
     col1, col2, col3 = st.columns(3)
@@ -123,12 +125,16 @@ with st.form("formulario_gerador_credenciais"):
 
 if botao_gerar:
     erro = False
-    setor_real_colab = None 
+    setor_real_colab = None
 
     if not nome_completo_colab: 
         st.error("O campo 'Nome Completo do Colaborador' é obrigatório.")
         erro = True
-    
+
+    if not email_colab:
+        st.error("O campo 'E-mail do Colaborador' é obrigatório.")
+        erro = True
+
     if not setor_selecionado_formatado:
         st.error("O campo 'Setor' é obrigatório.")
         erro = True
@@ -137,41 +143,46 @@ if botao_gerar:
         if not setor_real_colab:
             st.error("Seleção de setor inválida.")
             erro = True
-    
+
     if not erro and setor_real_colab:
         primeiro_nome, ultimo_sobrenome, primeiro_nome_cap = processar_nome_completo(nome_completo_colab)
         setor_normalizado = normalizar_texto(setor_real_colab)
 
-        output_lines = []
-        first_section_added = False
+        output = f"""
+**Nome do colaborador** : {nome_completo_colab}  
+**Setor** : {setor_real_colab}  
+**E-mail** : {email_colab}  
+
+**Usuário de referência** : {usuario_referencia if usuario_referencia else '-'}  
+
+"""
 
         if cb_cloud:
-            if first_section_added: output_lines.append("")
             user_c, pass_c = gerar_credenciais_cloud(primeiro_nome, ultimo_sobrenome, setor_normalizado)
-            output_lines.append(f"Acessar a Cloud: [{URL_CLOUD.split('//')[1].split('/')[0]}]({URL_CLOUD})")
-            output_lines.append(f"Usuário: `{user_c}` Senha: `{pass_c}`")
-            first_section_added = True
+            output += f"""<pre>
+Acessar a Cloud pelo link Cloud :
+Usuário: {user_c}
+Senha: {pass_c}
+</pre>
+"""
 
         if cb_senior:
-            if first_section_added: output_lines.append("")
             user_s, pass_s = gerar_credenciais_senior(primeiro_nome, ultimo_sobrenome)
-            output_lines.append(f"Senior:")
-            output_lines.append(f"Usuário: `{user_s}` Senha: `{pass_s}`")
-            first_section_added = True
+            output += f"""<pre>
+Senior (Segundo acesso dentro da Cloud):
+Usuário: {user_s}
+Senha: {pass_s}
+</pre>
+"""
 
         if cb_glpi:
-            if first_section_added: output_lines.append("")
             nome_formatado_para_senha_glpi = unidecode(primeiro_nome_cap)
             user_g, pass_g = gerar_credenciais_glpi(primeiro_nome, ultimo_sobrenome, nome_formatado_para_senha_glpi)
-            output_lines.append(f"Para realizar chamados para o TI: [{URL_GLPI.split('//')[1].split('/')[0]}]({URL_GLPI})")
-            output_lines.append(f"Usuário: `{user_g}` Senha: `{pass_g}`")
-            first_section_added = True
-        
-        if not output_lines:
-            st.info("Nenhum sistema selecionado para gerar credenciais.")
-        else:
-            output_string = "\n".join(output_lines)
-            st.markdown(output_string)
-            
-    elif not erro and not setor_real_colab:
-        st.warning("Problema ao identificar o setor selecionado. Verifique a seleção.")
+            output += f"""<pre>
+Acessar o local para fazer chamado para o TI (GLPI) pelo link Lista de formulários - GLPI:
+Usuário: {user_g}
+Senha: {pass_g}
+</pre>
+"""
+
+        st.markdown(output, unsafe_allow_html=True)
